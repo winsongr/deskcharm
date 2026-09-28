@@ -1,6 +1,6 @@
 cask "deskcharm" do
   version "0.1.0"
-  sha256 "beba471bcf1b80102c67aadb8ae538a0c842a6dde50b087dc08458f38130e6f2"
+  sha256 "b1c1e9473c22a1eddd090ad882f6404ca1694a480eed13c6d8931345d910cd14"
 
   url "https://github.com/winsongr/deskcharm/releases/download/v#{version}/Deskcharm-#{version}.zip"
   name "Deskcharm"
