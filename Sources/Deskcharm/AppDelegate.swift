@@ -45,6 +45,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(submenu("Position", options: Settings.positions, current: settings.position, action: #selector(pickPosition)))
 
         menu.addItem(.separator())
+        if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
+           let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String {
+            let info = NSMenuItem(title: "Deskcharm \(version) (\(build))", action: nil, keyEquivalent: "")
+            info.isEnabled = false
+            menu.addItem(info)
+        }
         menu.addItem(withTitle: "Quit Deskcharm", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         return menu
     }
