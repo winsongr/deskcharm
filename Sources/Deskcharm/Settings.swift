@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 @MainActor
@@ -34,7 +35,29 @@ final class Settings: ObservableObject {
         didSet { UserDefaults.standard.set(charm.rawValue, forKey: Key.charm.rawValue) }
     }
 
+    @Published private(set) var photo: NSImage?
+
+    private static let photoFile = URL.applicationSupportDirectory
+        .appending(path: "Deskcharm", directoryHint: .isDirectory)
+        .appending(path: "photo")
+
+    func setPhoto(from url: URL) throws {
+        let data = try Data(contentsOf: url)
+        guard let image = NSImage(data: data) else {
+            throw CocoaError(.fileReadCorruptFile)
+        }
+        try FileManager.default.createDirectory(
+            at: Settings.photoFile.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try data.write(to: Settings.photoFile, options: .atomic)
+        photo = image
+    }
+
     init() {
+        let savedPhoto = (try? Data(contentsOf: Settings.photoFile)).flatMap(NSImage.init(data:))
+        photo = savedPhoto
+
         beadSize = Settings.read(.beadSize, fallback: 96)
         cordLength = Settings.read(.cordLength, fallback: 212)
         sensitivity = Settings.read(.sensitivity, fallback: 0.5)
@@ -42,7 +65,8 @@ final class Settings: ObservableObject {
         position = Settings.read(.position, fallback: 0.80)
 
         let stored = UserDefaults.standard.string(forKey: Key.charm.rawValue)
-        charm = stored.flatMap(Charm.init(rawValue:)) ?? .nazar
+        let restored = stored.flatMap(Charm.init(rawValue:)) ?? .nazar
+        charm = restored == .photo && savedPhoto == nil ? .nazar : restored
     }
 
     private enum Key: String {

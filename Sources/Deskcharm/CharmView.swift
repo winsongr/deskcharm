@@ -27,6 +27,10 @@ struct CharmView: View {
         switch settings.charm {
         case .nazar:
             NazarBead(size: size)
+        case .photo:
+            if let photo = settings.photo {
+                PhotoLocket(image: photo, size: size)
+            }
         default:
             Text(settings.charm.glyph)
                 .font(.system(size: size * 0.82))
@@ -170,6 +174,54 @@ struct NazarBead: View {
                 .rotationEffect(.degrees(-34))
                 .offset(x: -size * 0.235, y: -size * 0.27)
                 .blur(radius: 1.2)
+        }
+        .frame(width: size, height: size)
+        .clipShape(Circle())
+        .shadow(color: .black.opacity(0.50), radius: 12, y: 5)
+    }
+}
+
+struct PhotoLocket: View {
+    let image: NSImage
+    let size: CGFloat
+
+    private var rim: CGFloat { max(size * 0.07, 4) }
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color(red: 0.96, green: 0.84, blue: 0.55),
+                            Color(red: 0.72, green: 0.54, blue: 0.26),
+                            Color(red: 0.52, green: 0.37, blue: 0.16),
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+
+            Image(nsImage: image)
+                .resizable()
+                .scaledToFill()
+                .frame(width: size - rim * 2, height: size - rim * 2)
+                .clipShape(Circle())
+
+            Circle()
+                .strokeBorder(.black.opacity(0.25), lineWidth: 1)
+                .padding(rim)
+
+            Circle()
+                .fill(
+                    RadialGradient(
+                        colors: [.white.opacity(0.30), .white.opacity(0.05), .clear],
+                        center: UnitPoint(x: 0.30, y: 0.24),
+                        startRadius: 0,
+                        endRadius: size * 0.55
+                    )
+                )
+                .padding(rim)
         }
         .frame(width: size, height: size)
         .clipShape(Circle())

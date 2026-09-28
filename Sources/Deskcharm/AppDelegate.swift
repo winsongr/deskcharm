@@ -1,4 +1,5 @@
 import AppKit
+import ServiceManagement
 import SwiftUI
 
 @MainActor
@@ -43,6 +44,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(submenu("Sensitivity", options: Settings.sensitivities, current: settings.sensitivity, action: #selector(pickSensitivity)))
         menu.addItem(submenu("Swing", options: Settings.swings, current: settings.swing, action: #selector(pickSwing)))
         menu.addItem(submenu("Position", options: Settings.positions, current: settings.position, action: #selector(pickPosition)))
+
+        menu.addItem(.separator())
+        let login = NSMenuItem(title: "Launch at Login", action: #selector(toggleLaunchAtLogin), keyEquivalent: "")
+        login.target = self
+        login.state = SMAppService.mainApp.status == .enabled ? .on : .off
+        menu.addItem(login)
 
         menu.addItem(.separator())
         if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
@@ -110,8 +117,48 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             let charm = Charm(rawValue: raw)
         else { return }
 
+        if charm == .photo {
+            guard choosePhoto() || settings.photo != nil else { return }
+        }
+
         settings.charm = charm
         applyGlyph()
+        refresh()
+    }
+
+    private func choosePhoto() -> Bool {
+        let picker = NSOpenPanel()
+        picker.title = "Choose a photo for your charm"
+        picker.allowedContentTypes = [.image]
+        picker.allowsMultipleSelection = false
+        picker.canChooseDirectories = false
+
+        NSApp.activate()
+        guard picker.runModal() == .OK, let url = picker.url else { return false }
+
+        do {
+            try settings.setPhoto(from: url)
+            return true
+        } catch {
+            NSAlert(error: error).runModal()
+            return false
+        }
+    }
+
+    @objc private func toggleLaunchAtLogin() {
+        let service = SMAppService.mainApp
+        do {
+            if service.status == .enabled {
+                try service.unregister()
+            } else {
+                try service.register()
+            }
+        } catch {
+            NSAlert(error: error).runModal()
+        }
+        if service.status == .requiresApproval {
+            SMAppService.openSystemSettingsLoginItems()
+        }
         refresh()
     }
 
